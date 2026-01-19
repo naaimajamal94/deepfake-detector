@@ -77,7 +77,7 @@ if uploaded_file is not None:
     if fake_prob >= THRESHOLD:
         st.error(
             f"❌ **Image is AI-generated** "
-            f"(could be Grok, Gemini, ChatGPT, or other AI models)\n\n"
+            f"(could be Grok, Gemini or ChatGPT)\n\n"
             f"**Confidence:** {fake_prob * 100:.2f}%"
         )
     else:
@@ -91,3 +91,4 @@ if uploaded_file is not None:
         "⚠️ This system does not identify the specific AI model used. "
         "It only estimates whether an image is AI-generated or real."
     )
+
