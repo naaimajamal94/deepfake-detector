@@ -6,27 +6,46 @@ from PIL import Image
 import os
 import gdown
 
-# ================= PAGE SETUP =================
-st.set_page_config(page_title="Deepfake Detector", layout="centered")
-st.title("🕵️ Deepfake Image Detector")
-st.caption("For research and educational purposes only")
+# ================= PAGE CONFIG =================
+st.set_page_config(
+    page_title="AI Image Authenticity Checker",
+    layout="centered"
+)
+
+st.title("🛡️ AI Image Authenticity Checker")
+
+st.write(
+    "**Hello, please upload your image to test if this is real or AI generated/modified.**"
+)
+
+st.caption(
+    "This tool analyzes technical patterns to estimate whether an image was AI-generated. "
+    "Uploaded images are processed temporarily and are not stored."
+)
 
 # ================= SETTINGS =================
 THRESHOLD = 0.65
 device = torch.device("cpu")
 
-# ================= MODEL DOWNLOAD =================
 MODEL_URL = "https://drive.google.com/uc?id=1aYVR0bisFExbdX7ZPYpjXN6TL5K6Fsb9"
 MODEL_PATH = "model_2_gemini.pth"
 
+# ================= LOAD MODEL =================
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        st.info("Downloading model (first time only)...")
+        st.info("Downloading model (first-time setup)...")
         gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
 
-    model = timm.create_model("xception", pretrained=False, num_classes=2)
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+    model = timm.create_model(
+        "xception",
+        pretrained=False,
+        num_classes=2
+    )
+
+    model.load_state_dict(
+        torch.load(MODEL_PATH, map_location=device)
+    )
     model.eval()
     return model
 
@@ -36,19 +55,22 @@ model = load_model()
 transform = transforms.Compose([
     transforms.Resize((299, 299)),
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Normalize(
+        mean=(0.5, 0.5, 0.5),
+        std=(0.5, 0.5, 0.5)
+    )
 ])
 
 # ================= IMAGE UPLOAD =================
-uploaded = st.file_uploader(
-    "Upload an image to check if it is REAL or FAKE",
+uploaded_file = st.file_uploader(
+    "Upload an image (JPG, JPEG, PNG)",
     type=["jpg", "jpeg", "png"]
 )
 
 # ================= PREDICTION =================
-if uploaded is not None:
-    image = Image.open(uploaded).convert("RGB")
-    st.image(image, caption="Uploaded Image", width=300)
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("RGB")
+    st.image(image, caption="Uploaded Image", width=320)
 
     img_tensor = transform(image).unsqueeze(0)
 
@@ -56,11 +78,23 @@ if uploaded is not None:
         outputs = model(img_tensor)
         probs = torch.softmax(outputs, dim=1)
 
-    fake_prob = probs[0][0].item()  # 0 = FAKE
+    fake_prob = probs[0][0].item()
+    real_prob = 1 - fake_prob
 
-    st.subheader("Result")
+    st.subheader("🔍 Result")
 
     if fake_prob >= THRESHOLD:
-        st.error(f"🚨 FAKE IMAGE\n\nConfidence: {fake_prob*100:.2f}%")
+        st.error(
+            f"❌ **Image generated from AI other than Grok, Gemini, ChatGPT**\n\n"
+            f"**Confidence:** {fake_prob * 100:.2f}%"
+        )
     else:
-        st.success(f"✅ REAL IMAGE\n\nConfidence: {(1 - fake_prob)*100:.2f}%")
+        st.success(
+            f"✅ **Real Image**\n\n"
+            f"**Confidence:** {real_prob * 100:.2f}%"
+        )
+
+    st.caption(
+        "⚠️ Results are probabilistic and should not be considered definitive proof."
+    )
+
