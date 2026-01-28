@@ -14,6 +14,19 @@ st.set_page_config(
 
 st.title("🛡️ AI Image Authenticity Checker")
 
+# ================= LIMITATIONS (BIG & CLEAR) =================
+st.markdown(
+    """
+    🚨 **IMPORTANT LIMITATIONS – PLEASE READ** 🚨  
+
+    **This app only detects faces that are created or modified using AI.**  
+    It does NOT analyze backgrounds, objects, or non-face regions.
+
+    **This app may NOT correctly identify real images captured using iPhone cameras or images with strong filters or enhancements.**  
+    Results for such images should be interpreted with caution.
+    """
+)
+
 st.write(
     "**Hello, please upload your image to test if this is real or AI generated/modified.**"
 )
@@ -73,22 +86,18 @@ if uploaded_file is not None:
 
     st.subheader("🔍 Result")
 
-    # ----------- CORRECT LOGIC & WORDING -----------
     if fake_prob >= THRESHOLD:
         st.error(
-            f"❌ **Image is AI-generated** "
-            f"(could be Grok, Gemini or ChatGPT)\n\n"
+            f"❌ **Image seems fake**\n\n"
             f"**Confidence:** {fake_prob * 100:.2f}%"
         )
     else:
         st.success(
-            f"✅ **Image appears real "
+            f"✅ **Image appears real**\n\n"
             f"**Confidence:** {real_prob * 100:.2f}%"
         )
 
     st.caption(
-        "⚠️ This system does not identify the specific AI model used. "
-        "It only estimates whether an image is AI-generated or real."
+        "⚠️ This app does not identify the specific AI tool used. "
+        "It only estimates whether a face in the image is AI-generated or real."
     )
-
-
